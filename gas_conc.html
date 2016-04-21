@@ -1,0 +1,280 @@
+<!doctype html>
+<html>
+<head>
+	<title> Thready - Threat Detection Using Drone </title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+	<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="shorcut icon" href="thready.png">
+	<!-- <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
+	<style type="text/css">
+		body{
+			background:#424242;
+			text-align:center;
+		}
+
+		nav{
+			background-color:#212121;
+		}
+	</style>
+</head>
+<body>
+	<nav>
+	    <div class="nav-wrapper">
+	      <a href="#" class="brand-logo center">THREADY</a>
+	    </div>
+  	</nav><br>
+  	<div class="container">
+		<span style="color:#fff;">Gas Concentration: </span><div id="gas_concentration"></div> 
+		<div id='donut_single' style="width:900px; height:500px;"></div>
+	</div>
+	<!--<input type="button" id="btnPieChart" value="Refresh" />-->
+	<script type="text/javascript">
+		var deviceID = "230024001447343339383037";
+		var access_token = "77394ac5db47eb38c8a16a28a946c74f5c1d15c7";
+		var eventSource = new EventSource("https://api.particle.io/v1/devices/" + deviceID + "/events/?access_token=" + access_token);
+
+		var conc_value;
+
+		eventSource.addEventListener('open',function(e){
+			console.log("Taking data");
+		},false);
+
+		eventSource.addEventListener('error', function(e){
+			console.log("Error in connection");
+		}, false);
+		
+		eventSource.addEventListener('Gas_Concentration', function(e){
+			var parsedData = JSON.parse(e.data);
+			var final_value = document.getElementById("gas_concentration");
+
+			final_value.innerHTML = parsedData.data;
+			conc_value = parsedData.data;
+			final_value.style.fontSize = "30px";
+			final_value.style.color = "#fff";
+		}, false);
+	</script>
+	<!--
+	<script type="text/javascript">
+		var timeout = setInterval(curr_value,2000);
+		function curr_value(){
+			return conc_value;
+		}
+
+		google.charts.load('current', {'packages':['corechart']});
+		google.charts.setOnLoadCallback(drawChart);
+		function drawChart(){
+			var data = google.visualization.arrayToDataTable([
+				['Potential_Difference','Value'],
+				['Gas_Concentration',parseInt(curr_value())/10],
+				['Non-threat',100-(parseInt(curr_value())/10)]
+				]);
+
+			var options = {
+				pieHole: 0.4,
+				title: 'Threat level'
+			};
+			var chart = new google.visualization.PieChart(document.getElementById('donut_single'));
+			chart.draw(data, options);
+		}
+	</script>
+-->
+		<!--
+		<script src="http://code.jquery.com/jquery-1.6.3.min.js"></script>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="http://code.highcharts.com/modules/exporting.js"></script>
+		<script type="text/javascript">
+				var timeout = setTimeout(curr_value,5000);
+				function curr_value(){
+					return conc_value;
+				}
+				
+				var threat =  parseInt(curr_value())/10;
+				var non_threat = 100-threat;
+
+				$('#btnPieChart').live('click',function(){
+					var data = [
+						['Threat',threat],
+						['Non-threat',non_threat]  //100-(parseInt(curr_value/10))
+					];
+
+				RenderPieChart('donut_single', data);
+				});
+
+				function RenderPieChart(elementId, datalist){
+					new Highcharts.Chart({
+						chart: {
+							renderTo: elementId,
+							plotBackgroundColor:null,
+							plotBorderWidth: null,
+							plotShadow: false
+						}, title: {
+							text: "Threat Level"
+						},
+						tooltip: {
+							formatter: function(){
+								return '<b>' + this.point.name + '<b>:' + this.percentage + '%';
+							}
+						},
+						plotOptions: {
+							pie: {
+								allowPointSelect: true,
+								cursor: 'pointer',
+								dataLabels: {
+									enable:true,
+									color:'#000',
+									connectorColor: '#000',
+									formatter: function(){
+										return '<b>' + this.point.name + '</b>:' + this.percentage + '%';
+									}
+								}
+							}
+						},
+						series: [{
+							type: 'pie',
+							name: 'Browser share',
+							data: datalist
+						}]
+					});
+				};
+		</script>
+	-->
+	<script src="http://code.jquery.com/jquery-1.6.3.min.js"></script>
+	<script src="https://code.highcharts.com/stock/highstock.js"></script>
+	<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+	<script type="text/javascript">
+		/*$(function(){
+			Highcharts.setOptions({
+				global:{
+					useUTC : false
+				}
+			});
+
+			$('#donut_single').highcharts('StockChart',{
+				chart : {
+					events: {
+						load : function(){
+							//set up the updating of the chart each second
+							var series = this.series[0];
+							setInterval(function(){
+								var x = (new Date()).getTime(),
+								//y = parseInt(conc_value);
+								y = Math.round(Math.random() * 100);
+								series.addPoint([x,y],true,true);
+							}, 5000);
+						}
+					}
+				},
+
+				rangeSelector: {
+		            buttons: [{
+		                count: 1,
+		                type: 'minute',
+		                text: '1M'
+		            }, {
+		                count: 5,
+		                type: 'minute',
+		                text: '5M'
+		            }, {
+		                type: 'all',
+		                text: 'All'
+		            }],
+		            inputEnabled: false,
+		            selected: 0
+		        },
+
+				title : {
+					text: 'Gas Concentration'
+				},
+
+				exporting: {
+					enabled: false
+				},
+
+				series : [{
+					name : 'Gas Concentration',
+					data: (function(){
+						//generate an array of random data
+						var data = [], time = (new Date()).getTime(),i;
+
+						for(i=-999;i<=0;i+=1){
+							data.push([
+								time + i*1000,
+								Math.round(Math.random() * 100)]);
+						return data;
+					}
+				}
+			)}]
+		});
+});*/
+$(function () {
+
+    Highcharts.setOptions({
+        global : {
+            useUTC : false
+        }
+    });
+
+    // Create the chart
+    $('#donut_single').highcharts('StockChart', {
+        chart : {
+            events : {
+                load : function () {
+
+                    // set up the updating of the chart each second
+                    var series = this.series[0];
+                    setInterval(function () {
+                        var x = (new Date()).getTime(), // current time
+                            y = Math.round(parseInt(conc_value)/10);
+                        series.addPoint([x, y], true, true);
+                    }, 1000);
+                }
+            }
+        },
+
+        rangeSelector: {
+            buttons: [{
+                count: 1,
+                type: 'minute',
+                text: '1M'
+            }, {
+                count: 5,
+                type: 'minute',
+                text: '5M'
+            }, {
+                type: 'all',
+                text: 'All'
+            }],
+            inputEnabled: false,
+            selected: 0
+        },
+
+        title : {
+            text : 'Gas Concentration'
+        },
+
+        exporting: {
+            enabled: false
+        },
+
+        series : [{
+            name : 'Gas Concentration',
+            data : (function () {
+                // generate an array of random data
+                var data = [], time = (new Date()).getTime(), i;
+
+                for (i = -999; i <= 0; i += 1) {
+                    data.push([
+                        time + i * 1000,
+                        Math.round(parseInt(conc_value)/10)
+                    ]);
+                }
+                return data;
+            }())
+        }]
+    });
+
+});
+	</script>
+	<script src="https://gist.github.com/MechanicalCoder/a14fa1dabbdf29df71d55f9695198750.js"></script>
+</body>
+</html>

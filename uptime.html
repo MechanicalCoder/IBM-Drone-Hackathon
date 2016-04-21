@@ -1,0 +1,42 @@
+<!--https://community.particle.io/t/tutorial-getting-started-with-spark-publish/3422 -->
+<!doctype html>
+<html>
+	<head>
+		<title> Measure Spark Photon Uptime </title>
+	</head>
+	<body>
+		<span id="uptime"></span><br>
+		<span id="tstamp"></span>
+
+		<br><br>
+		<button onclick="start()">Connect </button>
+
+		<script type="text/javascript">
+			function start(){
+				document.getElementById("uptime").innerHTML = "Waiting for data...";
+				var deviceID = "230024001447343339383037";
+				var accessToken = "77394ac5db47eb38c8a16a28a946c74f5c1d15c7";
+				var eventSource = new EventSource("https://api.particle.io/v1/devices/" + deviceID + "/events/?access_token=" + accessToken);
+				console.log(eventSource);
+
+				eventSource.addEventListener('open', function(e){
+					console.log("Opened!");
+				},false);
+				
+				eventSource.addEventListener('error',function(e){
+					console.log("Errored!");
+				},false);
+
+				eventSource.addEventListener('Uptime',function(e){
+					var parsedData = JSON.parse(e.data);
+					var tempSpan = document.getElementById("uptime");
+					var tsSpan = document.getElementById("tstamp");
+					tempSpan.innerHTML = "Core: " + parsedData.coreid + " uptime: " + parsedData.data + " (h:m:s)";
+					tempSpan.style.fontsize = "28px";
+					tsSpan.innerHTML = "At timestamp " + parsedData.published_at;
+					tsSpan.style.fontSize = "9px";
+				},false);
+			}
+		</script>
+	</body>
+</html>
